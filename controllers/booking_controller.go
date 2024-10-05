@@ -13,8 +13,9 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-type BookingCarId struct {
-	CarID uint `json:"car_id"`
+type BookingCarDriverId struct {
+	CarID    uint  `json:"car_id"`
+	DriverID *uint `json:"driver_id"`
 }
 
 func GetBookings(c echo.Context) error {
@@ -44,7 +45,7 @@ func CreateBooking(c echo.Context) error {
 	}
 
 	var car models.Car
-	if result := config.DB.First(&car, booking.CarID).Where("availability = ?", true); result.Error != nil {
+	if result := config.DB.Where("availability = ?", true).First(&car, booking.CarID); result.Error != nil {
 		return utils.JSONResponse(c, http.StatusNotFound, "Car not found", nil)
 	}
 	if !car.Availability {
@@ -65,6 +66,27 @@ func CreateBooking(c echo.Context) error {
 
 	booking.TotalCost = totalCost
 	booking.DayOfRent = daysOfRent
+	totalDiscount := calculateDiscount(daysOfRent, car.DailyRent, customer.MembershipID)
+	booking.MembershipDiscount = totalDiscount
+
+	if booking.RentType == "with_driver" {
+		var driver models.Driver
+		if err := tx.First(&driver, booking.DriverID).Error; err != nil {
+			return utils.JSONResponse(c, http.StatusNotFound, "Driver not found", nil)
+		}
+
+		booking.DriverIncentive = calculateDriverIncentive(daysOfRent, car.DailyRent)
+		driver.Incentive += booking.DriverIncentive
+
+		if result := tx.Save(&driver); result.Error != nil {
+			tx.Rollback()
+			return utils.JSONResponse(c, http.StatusInternalServerError, result.Error.Error(), nil)
+		}
+	}
+
+	// Calculate total cost
+	booking.TotalCost = (float64(daysOfRent) * car.DailyRent) - totalDiscount
+
 	booking.Status = true
 	car.Availability = false
 
@@ -89,8 +111,9 @@ func UpdateBooking(c echo.Context) error {
 		return utils.JSONResponse(c, http.StatusNotFound, "booking not found", nil)
 	}
 
-	response := BookingCarId{
-		CarID: booking.CarID,
+	response := BookingCarDriverId{
+		CarID:    booking.CarID,
+		DriverID: booking.DriverID,
 	}
 
 	if err := c.Bind(&booking); err != nil {
@@ -123,6 +146,62 @@ func UpdateBooking(c echo.Context) error {
 
 	booking.TotalCost = totalCost
 	booking.DayOfRent = daysOfRent
+
+	totalDiscount := calculateDiscount(daysOfRent, car.DailyRent, customer.MembershipID)
+	booking.MembershipDiscount = totalDiscount
+
+	if booking.Status {
+
+		if booking.RentType == "with_driver" {
+			var driver models.Driver
+			if response.DriverID != nil && (response.DriverID != booking.DriverID) {
+
+				if err := tx.First(&driver, response.DriverID).Error; err != nil {
+					return utils.JSONResponse(c, http.StatusNotFound, "Driver not found", nil)
+				}
+				driver.Incentive -= booking.DriverIncentive
+				booking.DriverIncentive = 0
+				if result := tx.Save(&driver); result.Error != nil {
+					tx.Rollback()
+					return utils.JSONResponse(c, http.StatusInternalServerError, result.Error.Error(), nil)
+				}
+
+			} else {
+				if response.DriverID == nil {
+					if err := tx.First(&driver, booking.DriverID).Error; err != nil {
+						return utils.JSONResponse(c, http.StatusNotFound, "Driver not found", nil)
+					}
+
+					booking.DriverIncentive = calculateDriverIncentive(daysOfRent, car.DailyRent)
+					driver.Incentive += booking.DriverIncentive
+					if result := tx.Save(&driver); result.Error != nil {
+						tx.Rollback()
+						return utils.JSONResponse(c, http.StatusInternalServerError, result.Error.Error(), nil)
+					}
+				}
+
+			}
+
+		} else {
+
+			if response.DriverID != nil {
+				var driver models.Driver
+				if err := tx.First(&driver, response.DriverID).Error; err != nil {
+					return utils.JSONResponse(c, http.StatusNotFound, "Driver not found", nil)
+				}
+				driver.Incentive -= booking.DriverIncentive
+				if result := tx.Save(&driver); result.Error != nil {
+					tx.Rollback()
+					return utils.JSONResponse(c, http.StatusInternalServerError, result.Error.Error(), nil)
+				}
+				booking.DriverIncentive = 0
+				booking.DriverID = nil
+			}
+		}
+	}
+
+	// Calculate total cost
+	booking.TotalCost = (float64(daysOfRent) * car.DailyRent) - totalDiscount
 
 	if booking.Status {
 		car.Availability = false
@@ -207,4 +286,38 @@ func UtilsGetDaysOfRent(startDate, endDate string) (int64, error) {
 
 	daysOfRent := int64((endDates.Sub(startDates).Hours() / 24) + 1)
 	return daysOfRent, nil
+
+}
+
+func calculateDiscount(daysOfRent int64, dailyRent float64, membershipId *int64) float64 {
+
+	var discountRate float64
+
+	var membership models.Membership
+
+	if membershipId == nil {
+		membership.Name = ""
+	} else {
+		if err := config.DB.First(&membership, membershipId).Error; err != nil {
+			return 0
+		}
+	}
+
+	switch membership.Name {
+	case "bronze":
+		discountRate = 0.04
+	case "silver":
+		discountRate = 0.07
+	case "gold":
+		discountRate = 0.15
+	default:
+		discountRate = 0
+	}
+
+	return float64(daysOfRent) * dailyRent * discountRate
+}
+
+// Calculate driver incentive
+func calculateDriverIncentive(daysOfRent int64, dailyCarRent float64) float64 {
+	return float64(daysOfRent) * dailyCarRent * 0.05 // 5% incentive
 }

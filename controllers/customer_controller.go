@@ -36,6 +36,12 @@ func CreateCustomer(c echo.Context) error {
 		return utils.JSONResponse(c, http.StatusBadRequest, err.Error(), nil)
 	}
 
+	// find membership
+	var membership models.Membership
+	if result := tx.First(&membership, customer.MembershipID); result.Error != nil {
+		return utils.JSONResponse(c, http.StatusNotFound, "membership not found", nil)
+	}
+
 	if result := tx.Create(&customer); result.Error != nil {
 		tx.Rollback()
 		return utils.JSONResponse(c, http.StatusInternalServerError, result.Error.Error(), nil)
@@ -55,6 +61,12 @@ func UpdateCustomer(c echo.Context) error {
 
 	if err := c.Bind(&customer); err != nil {
 		return utils.JSONResponse(c, http.StatusBadRequest, "Invalid input", nil)
+	}
+
+	// find membership
+	var membership models.Membership
+	if result := tx.First(&membership, customer.MembershipID); result.Error != nil {
+		return utils.JSONResponse(c, http.StatusNotFound, "membership not found", nil)
 	}
 
 	if err := tx.Save(&customer).Error; err != nil {

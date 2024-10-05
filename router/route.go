@@ -26,4 +26,7 @@ func SetupRoutes(e *echo.Echo) {
 	api.POST("/booking", controllers.CreateBooking)
 	api.PUT("/booking/:id", controllers.UpdateBooking)
 	api.DELETE("/booking/:id", controllers.DeleteBooking)
+
+	api.GET("/driver", controllers.GetDriver)
+	api.POST("/driver", controllers.CreateDriver)
 }
