@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/reusmana/car-rental-go/config"
@@ -13,6 +12,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 )
+
+type BookingCarId struct {
+	CarID uint `json:"car_id"`
+}
 
 func GetBookings(c echo.Context) error {
 	var bookings []models.Booking
@@ -77,10 +80,6 @@ func CreateBooking(c echo.Context) error {
 	return utils.JSONResponse(c, http.StatusCreated, "success created bookings", booking)
 }
 
-type BookingCarId struct {
-	CarID uint `json:"car_id"`
-}
-
 func UpdateBooking(c echo.Context) error {
 	id := c.Param("id")
 	var booking models.Booking
@@ -94,8 +93,6 @@ func UpdateBooking(c echo.Context) error {
 		CarID: booking.CarID,
 	}
 
-	fmt.Println(response.CarID)
-
 	if err := c.Bind(&booking); err != nil {
 		return utils.JSONResponse(c, http.StatusBadRequest, "Invalid input", nil)
 	}
@@ -105,6 +102,7 @@ func UpdateBooking(c echo.Context) error {
 	if result := config.DB.First(&car, booking.CarID); result.Error != nil {
 		return utils.JSONResponse(c, http.StatusNotFound, "Car not found", nil)
 	}
+
 	if response.CarID != booking.CarID {
 		if !car.Availability {
 			return utils.JSONResponse(c, http.StatusNotFound, "Car not available", nil)
@@ -126,13 +124,40 @@ func UpdateBooking(c echo.Context) error {
 	booking.TotalCost = totalCost
 	booking.DayOfRent = daysOfRent
 
-	if !booking.Status {
-		car.Availability = !car.Availability
+	if booking.Status {
+		car.Availability = false
 		if err := tx.Save(&car).Error; err != nil {
 			tx.Rollback()
 			return utils.JSONResponse(c, http.StatusInternalServerError, "Failed to update booking", nil)
 		}
+	} else {
+		car.Availability = true
+		if err := tx.Save(&car).Error; err != nil {
+			tx.Rollback()
+			return utils.JSONResponse(c, http.StatusInternalServerError, "Failed to update booking", nil)
+		}
+
 	}
+
+	if response.CarID != booking.CarID {
+		car.Availability = false
+		if err := tx.Save(&car).Error; err != nil {
+			tx.Rollback()
+			return utils.JSONResponse(c, http.StatusInternalServerError, "Failed to update booking", nil)
+		}
+
+		var oldCar models.Car
+		if err := config.DB.First(&oldCar, response.CarID).Error; err != nil {
+			return utils.JSONResponse(c, http.StatusInternalServerError, "Car not found", nil)
+		}
+
+		oldCar.Availability = true
+		if err := tx.Save(&oldCar).Error; err != nil {
+			tx.Rollback()
+			return utils.JSONResponse(c, http.StatusInternalServerError, "Failed to update booking", nil)
+		}
+	}
+
 	if err := tx.Save(&booking).Error; err != nil {
 		tx.Rollback()
 		return utils.JSONResponse(c, http.StatusInternalServerError, "Failed to update booking", nil)
@@ -164,7 +189,6 @@ func DeleteBooking(c echo.Context) error {
 }
 
 func UtilsGetDaysOfRent(startDate, endDate string) (int64, error) {
-	fmt.Println(startDate, endDate)
 
 	layout := "2006-01-02"
 

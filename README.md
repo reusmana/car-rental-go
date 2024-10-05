@@ -14,4 +14,4 @@ go run main.go
 
 ### this is auto generate colum db
 
-## for how to used, you can see the documentation, in this folder
+## for how to used, you can see the document_api, in this folder
