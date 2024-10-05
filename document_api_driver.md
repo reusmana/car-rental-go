@@ -8,9 +8,9 @@ Request Body :
 
 ```json
 {
-  "name": "resuamana",
-  "nik": "320206161198002",
-  "phone": "085210780093"
+  "name": "jong",
+  "daily_cost": 50000,
+  "incentive": 0
 }
 ```
 
@@ -19,12 +19,11 @@ Response Body Success :
 ```json
 {
   "status": 201,
-  "message": "success created customers",
+  "message": "success created drivers",
   "data": {
     "id": 1,
-    "name": "resuamana",
-    "nik": "320206161198002",
-    "phone": "085210780093"
+    "name": "jong",
+    "incentive": 0
   }
 }
 ```
@@ -42,9 +41,8 @@ Response Body Success :
   "data": [
     {
       "id": 1,
-      "name": "reusmana",
-      "nik": "320206161198002",
-      "phone": "085210780093"
+      "name": "jong",
+      "incentive": 0
     }
   ]
 }

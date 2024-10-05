@@ -8,10 +8,11 @@ Request Body :
 
 ```json
 {
-  "customer_id": 1,
-  "car_id": 1,
+  "customer_id": 2,
+  "car_id": 2,
   "start_date": "2024-10-15",
-  "end_date": "2024-10-16"
+  "end_date": "2024-10-16",
+  "rent_type": "without_driver"
 }
 ```
 
@@ -22,13 +23,52 @@ Response Body Success :
   "status": 201,
   "message": "success created bookings",
   "data": {
-    "id": 1,
-    "customer_id": 1,
-    "car_id": 1,
+    "id": 2,
+    "customer_id": 2,
+    "car_id": 2,
+    "driver_id": null,
+    "rent_type": "without_driver",
     "start_date": "2024-10-15",
     "end_date": "2024-10-16",
     "day_of_rent": 2,
-    "total_cost": 400000,
+    "total_cost": 340000,
+    "membership_discount": 60000,
+    "status": true
+  }
+}
+```
+
+Request Body use Driver :
+
+```json
+{
+  "customer_id": 1,
+  "driver_id": 1,
+  "car_id": 1,
+  "start_date": "2024-10-15",
+  "end_date": "2024-10-16",
+  "rent_type": "with_driver"
+}
+```
+
+Response Body Success use Driver :
+
+```json
+{
+  "status": 201,
+  "message": "success created bookings",
+  "data": {
+    "id": 1,
+    "customer_id": 1,
+    "car_id": 1,
+    "driver_id": 1,
+    "rent_type": "with_driver",
+    "start_date": "2024-10-15",
+    "end_date": "2024-10-16",
+    "day_of_rent": 2,
+    "total_cost": 340000,
+    "membership_discount": 60000,
+    "driver_incentive": 20000,
     "status": true
   }
 }
@@ -54,7 +94,8 @@ Request Body :
   "customer_id": 1,
   "car_id": 2,
   "start_date": "2024-10-15",
-  "end_date": "2024-10-15",
+  "end_date": "2024-10-16",
+  "rent_type": "without_driver",
   "status": true
 }
 ```
@@ -66,13 +107,53 @@ Response Body Success :
   "status": 200,
   "message": "booking updated successfully",
   "data": {
-    "id": 1,
+    "id": 2,
     "customer_id": 1,
     "car_id": 2,
+    "driver_id": null,
+    "rent_type": "without_driver",
     "start_date": "2024-10-15",
-    "end_date": "2024-10-15",
-    "day_of_rent": 1,
-    "total_cost": 300000,
+    "end_date": "2024-10-16",
+    "day_of_rent": 2,
+    "total_cost": 340000,
+    "membership_discount": 60000,
+    "status": true
+  }
+}
+```
+
+Request Body use Driver :
+
+```json
+{
+  "customer_id": 1,
+  "driver_id": 1,
+  "car_id": 1,
+  "start_date": "2024-10-15",
+  "end_date": "2024-10-16",
+  "rent_type": "with_driver",
+  "status": true
+}
+```
+
+Response Body Success use Driver:
+
+```json
+{
+  "status": 200,
+  "message": "booking updated successfully",
+  "data": {
+    "id": 1,
+    "customer_id": 1,
+    "car_id": 1,
+    "driver_id": 1,
+    "rent_type": "with_driver",
+    "start_date": "2024-10-15",
+    "end_date": "2024-10-16",
+    "day_of_rent": 2,
+    "total_cost": 340000,
+    "membership_discount": 60000,
+    "driver_incentive": 20000,
     "status": true
   }
 }
@@ -94,10 +175,14 @@ Response Body Success Without ID :
       "id": 1,
       "customer_id": 1,
       "car_id": 1,
+      "driver_id": 1,
+      "rent_type": "with_driver",
       "start_date": "2024-10-15",
       "end_date": "2024-10-16",
       "day_of_rent": 2,
-      "total_cost": 400000,
+      "total_cost": 340000,
+      "membership_discount": 60000,
+      "driver_incentive": 20000,
       "status": true
     }
   ]
@@ -114,10 +199,14 @@ Response Body Success With ID :
     "id": 1,
     "customer_id": 1,
     "car_id": 1,
+    "driver_id": 1,
+    "rent_type": "with_driver",
     "start_date": "2024-10-15",
     "end_date": "2024-10-16",
     "day_of_rent": 2,
-    "total_cost": 400000,
+    "total_cost": 340000,
+    "membership_discount": 60000,
+    "driver_incentive": 20000,
     "status": true
   }
 }

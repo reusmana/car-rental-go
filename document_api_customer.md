@@ -10,7 +10,8 @@ Request Body :
 {
   "name": "resuamana",
   "nik": "320206161198002",
-  "phone": "085210780093"
+  "phone": "085210780093",
+  "membership": 1
 }
 ```
 
@@ -24,7 +25,8 @@ Response Body Success :
     "id": 1,
     "name": "resuamana",
     "nik": "320206161198002",
-    "phone": "085210780093"
+    "phone": "085210780093",
+    "membership": 1
   }
 }
 ```
@@ -39,7 +41,8 @@ Request Body :
 {
   "name": "reusmana",
   "nik": "320206161198002",
-  "phone": "085210780093"
+  "phone": "085210780093",
+  "membership": 1
 }
 ```
 
@@ -53,7 +56,8 @@ Response Body Success :
     "id": 1,
     "name": "reusmana",
     "nik": "320206161198002",
-    "phone": "085210780093"
+    "phone": "085210780093",
+    "membership": 1
   }
 }
 ```
@@ -74,7 +78,8 @@ Response Body Success Without ID :
       "id": 1,
       "name": "reusmana",
       "nik": "320206161198002",
-      "phone": "085210780093"
+      "phone": "085210780093",
+      "membership": 1
     }
   ]
 }
@@ -90,7 +95,8 @@ Response Body Success With ID :
     "id": 1,
     "name": "reusmana",
     "nik": "320206161198002",
-    "phone": "085210780093"
+    "phone": "085210780093",
+    "membership": 1
   }
 }
 ```
