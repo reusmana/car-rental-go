@@ -18,4 +18,4 @@ go run main.go
 
 ## this is ERD DATABASE
 
-![Project Preview](ERD DATABASE.png)
+![Project Preview](ERD_DATABASE.png)
